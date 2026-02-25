@@ -188,6 +188,58 @@ html { overflow-x: hidden; }
 }
 
 /* ─── Legend ─── */
+/* ─── Empty state banner (no plan cargado) ─── */
+.plan-empty-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #eef2ff;
+  border: 2px dashed #a5b4fc;
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.plan-empty-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.plan-empty-text {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.plan-empty-text strong {
+  font-size: 0.9rem;
+  color: #3730a3;
+}
+
+.plan-empty-text span {
+  font-size: 0.8rem;
+  color: #6366f1;
+}
+
+.plan-empty-btn {
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.plan-empty-btn:hover { background: #4338ca; }
+
 .plan-legend {
   display: flex;
   flex-direction: column;

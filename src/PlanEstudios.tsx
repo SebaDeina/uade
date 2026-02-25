@@ -99,7 +99,7 @@ function MateriaRow({
 }
 
 export default function PlanEstudios({ uid }: { uid: string }) {
-  const { materias, setMaterias, loading, hasCustomPlan, careerName, uploadPlan } = useUserPlan(uid);
+  const { materias, setMaterias, loading, careerName, uploadPlan } = useUserPlan(uid);
   const { signOut, user } = useAuth();
   const [error] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(false);
@@ -226,16 +226,7 @@ export default function PlanEstudios({ uid }: { uid: string }) {
   if (loading) return <div className="plan-loading">Cargando plan de estudios...</div>;
   if (error)   return <div className="plan-error">Error: {error}</div>;
 
-  // Si el usuario nunca cargó su plan, mostramos la pantalla de carga completa
-  if (!hasCustomPlan && materias.length === 0) {
-    return (
-      <PlanUpload
-        fullScreen
-        userName={user?.displayName}
-        onUpload={uploadPlan}
-      />
-    );
-  }
+
 
   return (
     <div className="plan-estudios">
@@ -264,6 +255,23 @@ export default function PlanEstudios({ uid }: { uid: string }) {
           </div>
         </div>
         <h2 className="plan-subtitle">Malla curricular — Correlativas</h2>
+
+        {/* Banner si no tiene plan cargado aún */}
+        {materias.length === 0 && (
+          <div className="plan-empty-banner">
+            <span className="plan-empty-icon">📋</span>
+            <div className="plan-empty-text">
+              <strong>Todavía no cargaste tu plan de estudios</strong>
+              <span>Subí tu Excel o CSV para empezar a hacer el seguimiento de tu carrera.</span>
+            </div>
+            <button
+              className="plan-empty-btn"
+              onClick={() => setShowUpload(true)}
+            >
+              Cargar plan
+            </button>
+          </div>
+        )}
         <div className="plan-legend">
           <span className="plan-legend-clicks">Click para cambiar estado</span>
           <div className="plan-legend-boxes">
