@@ -25,9 +25,11 @@ function rowsToMaterias(rows: string[][]): Materia[] {
     const row = rows[i];
     const cell = (idx: number) => String(idx >= 0 ? row[idx] ?? '' : '').trim();
 
-    const yearVal = cell(añoIdx);
-    const y = yearVal !== '' && /^\d+$/.test(yearVal) ? parseInt(yearVal, 10) : currentYear;
-    currentYear = y;
+    const yearRaw = cell(añoIdx);
+    // Accept "1", "1° Año", "Primer Año", "1er", etc. — extract the leading digit
+    const yearMatch = yearRaw !== '' ? yearRaw.match(/(\d+)/) : null;
+    const y = yearMatch ? parseInt(yearMatch[1], 10) : currentYear;
+    if (yearRaw !== '') currentYear = y;
 
     const materia = cell(materiaIdx);
     if (!materia) continue;
