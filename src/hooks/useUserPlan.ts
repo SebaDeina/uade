@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { loadPlan, parsePlanFromText } from '../utils/parsePlan';
+import { parsePlanFromText } from '../utils/parsePlan';
 import type { Materia, EstadoUsuario, BasePlanMateria, UserPlanData } from '../types';
 
 /** Clave del doc en Firestore: users/{uid} */
@@ -31,7 +31,7 @@ export function useUserPlan(uid: string) {
 
         let baseMaterias: Materia[];
         if (data.basePlan) {
-          // 1a. El usuario ya cargó su propio plan
+          // Usuario ya cargó su plan
           const planData = data.basePlan as UserPlanData;
           baseMaterias = (planData.materias as BasePlanMateria[]).map((m) => ({ ...m, estadoUsuario: 'pendiente' as EstadoUsuario }));
           if (!cancelled) {
@@ -39,8 +39,8 @@ export function useUserPlan(uid: string) {
             setCareerName(planData.careerName);
           }
         } else {
-          // 1b. Sin plan personalizado → fallback al CSV del repo
-          baseMaterias = await loadPlan();
+          // Sin plan → usuario nuevo, empieza vacío y debe cargar su CSV
+          baseMaterias = [];
           if (!cancelled) {
             setHasCustomPlan(false);
             setCareerName('');
@@ -92,11 +92,10 @@ export function useUserPlan(uid: string) {
     [uid]
   );
 
-  /** Elimina el plan personalizado y vuelve al CSV del repo */
+  /** Elimina el plan personalizado — el usuario deberá subir uno nuevo */
   const removePlan = useCallback(async () => {
     await setDoc(userDoc(uid), { basePlan: null, estados: {} });
-    const fallback = await loadPlan();
-    setMateriasState(fallback);
+    setMateriasState([]);
     setHasCustomPlan(false);
     setCareerName('');
   }, [uid]);
