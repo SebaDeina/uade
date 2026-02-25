@@ -91,17 +91,17 @@ function rowsToMaterias(rows: string[][]): Materia[] {
   const headers = rows[0].map((h) => String(h ?? ''));
   const colValues = getColValues(rows);
 
-  const añoIdx     = detectColumn('year',    headers, colValues, ['AÑO', 'ANO', 'YEAR']);
-  const materiaIdx = detectColumn('materia', headers, colValues, ['MATERIA', 'ASIGNATURA', 'NOMBRE', 'SUBJECT']);
+  const añoIdx     = detectColumn('year',    headers, colValues, ['AÑO', 'ANO', 'YEAR', 'AÑO']);
+  const materiaIdx = detectColumn('materia', headers, colValues, ['MATERIA', 'MATERIAS', 'ASIGNATURA', 'NOMBRE', 'SUBJECT']);
   const notaIdx    = detectColumn('nota',    headers, colValues, ['NOTA', 'CALIFICACION', 'CALIFICACIÓN', 'GRADE', 'PUNTAJE']);
   const estadoIdx  = detectColumn('estado',  headers, colValues, ['ESTADO', 'STATUS']);
   const codigoIdx  = detectColumn('codigo',  headers, colValues, ['CODIGO', 'CÓDIGO', 'CODE', 'COD']);
-  // titulo is header-only, no content heuristic needed
-  const tituloIdx  = headers.findIndex((h) => { const n = norm(h); return n.includes('TITULO') || n.includes('TITULO'); });
+  const tituloColIdx = headers.findIndex((h) => { const n = norm(h); return n.includes('TITULO') || n.includes('TITULO'); });
 
   if (materiaIdx < 0) return [];
 
   let currentYear = 1;
+  let currentTitulo = '';      // tracks the degree title from "Titulo:..." rows
   const materias: Materia[] = [];
   let id = 0;
 
@@ -109,17 +109,32 @@ function rowsToMaterias(rows: string[][]): Materia[] {
     const row = rows[i];
     const cell = (idx: number) => String(idx >= 0 ? row[idx] ?? '' : '').trim();
 
+    // ── Detect embedded "Titulo: ..." rows ─────────────────────────
+    // Any cell in the row that starts with "Titulo:" or "Título:"
+    const tituloCell = row.find((c) => /^t[ií]tulo\s*:/i.test(String(c ?? '').trim()));
+    if (tituloCell) {
+      currentTitulo = String(tituloCell).replace(/^t[ií]tulo\s*:\s*/i, '').trim();
+      continue; // skip this row — don't add it as a materia
+    }
+
+    // ── Skip completely blank rows ──────────────────────────────────
+    if (row.every((c) => !String(c ?? '').trim())) continue;
+
+    // ── Year ────────────────────────────────────────────────────────
     const yearRaw = cell(añoIdx);
     const yearMatch = yearRaw !== '' ? yearRaw.match(/(\d+)/) : null;
     const y = yearMatch ? parseInt(yearMatch[1], 10) : currentYear;
     if (yearRaw !== '') currentYear = y;
 
+    // ── Materia ────────────────────────────────────────────────────
     const materia = cell(materiaIdx);
     if (!materia) continue;
 
     const nota   = cell(notaIdx);
     const estado = cell(estadoIdx);
+    const titulo = tituloColIdx >= 0 ? cell(tituloColIdx) : currentTitulo;
 
+    // ── Estado auto-detection ──────────────────────────────────────
     let estadoUsuario: Materia['estadoUsuario'] = 'pendiente';
     const notaNum = parseFloat(nota.replace(',', '.'));
     if (!isNaN(notaNum) && notaNum >= 4) {
@@ -138,7 +153,7 @@ function rowsToMaterias(rows: string[][]): Materia[] {
       nota,
       estado,
       estadoUsuario,
-      titulo: cell(tituloIdx),
+      titulo,
     });
   }
   return materias;
