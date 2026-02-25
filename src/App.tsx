@@ -1,5 +1,5 @@
 import { AuthProvider, useAuth } from './AuthContext';
-import LoginPage from './LoginPage';
+import LandingPage from './LandingPage';
 import PlanEstudios from './PlanEstudios';
 
 function AppContent() {
@@ -12,8 +12,8 @@ function AppContent() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#0f0f1a',
-        color: '#94a3b8',
+        background: '#fff',
+        color: '#718096',
         fontSize: '1rem',
       }}>
         Cargando...
@@ -21,7 +21,7 @@ function AppContent() {
     );
   }
 
-  if (!user) return <LoginPage />;
+  if (!user) return <LandingPage />;
 
   return <PlanEstudios uid={user.uid} />;
 }
