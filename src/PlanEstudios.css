@@ -388,6 +388,30 @@ html { overflow-x: hidden; }
   font-size: 0.8rem;
 }
 
+.plan-materia-right {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.plan-materia-nota {
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 0.15rem 0.5rem;
+  white-space: nowrap;
+}
+
+.plan-materia-row.aprobada .plan-materia-nota {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
 .plan-materia-status {
   font-size: 0.65rem;
   font-weight: 700;

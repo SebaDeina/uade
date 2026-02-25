@@ -1,8 +1,9 @@
 import { useState, useRef, useCallback, type DragEvent } from 'react';
+import { parsePlanFromFile } from './utils/parsePlan';
 import './PlanUpload.css';
 
 interface PlanUploadProps {
-  onUpload: (csvText: string, careerName: string) => Promise<void>;
+  onUpload: (csvText: string, careerName: string, parsed?: import('./types').Materia[]) => Promise<void>;
   onClose?: () => void;
   /** Si true, muestra el modal como pantalla inicial completa */
   fullScreen?: boolean;
@@ -15,18 +16,20 @@ export default function PlanUpload({ onUpload, onClose, fullScreen, userName }: 
   const [careerName, setCareerName] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notasDetected, setNotasDetected] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (f: File) => {
-    if (!f.name.endsWith('.csv')) {
-      setError('Solo se aceptan archivos .csv');
+    if (!/\.(csv|xlsx|xls|ods)$/i.test(f.name)) {
+      setError('Solo se aceptan archivos .csv, .xlsx o .xls');
       return;
     }
     setFile(f);
     setError(null);
+    setNotasDetected(false);
     // Auto-fill carrera desde el nombre del archivo
     if (!careerName) {
-      const name = f.name.replace(/\.csv$/i, '').replace(/[_-]/g, ' ');
+      const name = f.name.replace(/\.(csv|xlsx|xls|ods)$/i, '').replace(/[_-]/g, ' ');
       setCareerName(name.charAt(0).toUpperCase() + name.slice(1));
     }
   };
@@ -42,15 +45,22 @@ export default function PlanUpload({ onUpload, onClose, fullScreen, userName }: 
   const onDragLeave = () => setDragging(false);
 
   const handleSubmit = async () => {
-    if (!file) return setError('Seleccioná un archivo CSV primero');
+    if (!file) return setError('Seleccioná un archivo primero');
     if (!careerName.trim()) return setError('Completá el nombre de la carrera');
     setSaving(true);
     setError(null);
     try {
-      const text = await file.text();
-      await onUpload(text, careerName.trim());
+      const parsed = await parsePlanFromFile(file);
+      if (parsed.length === 0) throw new Error('No se encontraron materias en el archivo');
+      const hasNotas = parsed.some((m) => m.nota && m.nota.trim() !== '');
+      setNotasDetected(hasNotas);
+      // Convert back to text for the onUpload callback (which expects CSV text)
+      // Instead, we bypass text conversion and call onUpload directly with the parsed data
+      await onUpload(parsed.map((m) =>
+        `${m.year},${m.codigo},${m.materia},${m.nota},${m.estado}`
+      ).join('\n'), careerName.trim(), parsed);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error al subir el plan');
+      setError(e instanceof Error ? e.message : 'Error al procesar el archivo');
     } finally {
       setSaving(false);
     }
@@ -113,13 +123,13 @@ export default function PlanUpload({ onUpload, onClose, fullScreen, userName }: 
             <input
               ref={inputRef}
               type="file"
-              accept=".csv"
+              accept=".csv,.xlsx,.xls,.ods"
               style={{ display: 'none' }}
               onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
             />
             {file ? (
               <>
-                <span className="upload-file-icon">📄</span>
+                <span className="upload-file-icon">{/\.(xlsx|xls|ods)$/i.test(file.name) ? '📊' : '📄'}</span>
                 <span className="upload-file-name">{file.name}</span>
                 <span className="upload-file-sub">Clic para cambiar</span>
               </>
@@ -127,7 +137,7 @@ export default function PlanUpload({ onUpload, onClose, fullScreen, userName }: 
               <>
                 <span className="upload-file-icon">☁️</span>
                 <span className="upload-file-name">Arrastrá o hacé clic para seleccionar</span>
-                <span className="upload-file-sub">.csv — Exportado del SIU o secretaría</span>
+                <span className="upload-file-sub">.csv, .xlsx, .xls — SIU, Excel o secretaría</span>
               </>
             )}
           </div>
@@ -135,15 +145,18 @@ export default function PlanUpload({ onUpload, onClose, fullScreen, userName }: 
 
         {/* CSV format hint */}
         <details className="upload-hint">
-          <summary>¿Cómo debe ser el CSV?</summary>
+          <summary>¿Cómo debe ser el archivo?</summary>
           <div className="upload-hint-body">
-            <p>El archivo debe tener una fila de encabezado con las columnas:</p>
+            <p><strong>CSV:</strong> fila de encabezado con columnas:</p>
             <code>AÑO, CODIGO, MATERIA, NOTA, ESTADO</code>
-            <p>La columna <strong>ESTADO</strong> puede tener <em>APROBADO</em> para marcar las ya rendidas.
-            Las filas con <strong>AÑO</strong> en blanco se agrupan con el valor anterior.</p>
+            <p><strong>Excel (.xlsx/.xls):</strong> mismas columnas en la primera hoja.</p>
+            <p>Si la columna <strong>NOTA</strong> tiene un número ≥ 4, la materia se marca como aprobada automáticamente.</p>
           </div>
         </details>
 
+        {notasDetected && (
+          <p className="upload-notas-ok">✓ Notas detectadas — se mostrarán en tu plan</p>
+        )}
         {error && <p className="upload-error">{error}</p>}
 
         <div className="upload-actions">

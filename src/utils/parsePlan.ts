@@ -1,21 +1,17 @@
+import * as XLSX from 'xlsx';
 import type { Materia } from '../types';
 
 const CSV_URL = '/plan.csv';
 
-function parseCSV(text: string): string[][] {
-  const lines = text.replace(/\r\n/g, '\n').split('\n').filter((line) => line.trim());
-  return lines.map((line) => line.split(',').map((cell) => cell.trim()));
-}
-
-export function parsePlanFromText(text: string): Materia[] {
-  const rows = parseCSV(text);
+/** Converts a raw row array (string[][]) into Materia[], shared between CSV and Excel paths */
+function rowsToMaterias(rows: string[][]): Materia[] {
   if (rows.length < 2) return [];
 
-  const header = rows[0].map((h) => h.toUpperCase().trim());
-  const añoIdx     = header.findIndex((h) => h.includes('AÑO')     || h === 'AÑO');
+  const header = rows[0].map((h) => String(h ?? '').toUpperCase().trim());
+  const añoIdx     = header.findIndex((h) => h.includes('AÑO')     || h === 'ANO');
   const codigoIdx  = header.findIndex((h) => h.includes('CODIGO')  || h === 'CODIGO');
   const materiaIdx = header.findIndex((h) => h.includes('MATERIA') || h === 'MATERIA');
-  const notaIdx    = header.findIndex((h) => h.includes('NOTA')    || h === 'NOTA');
+  const notaIdx    = header.findIndex((h) => h.includes('NOTA')    || h === 'NOTA' || h.includes('CALIFICACION') || h.includes('CALIFICACIÓN'));
   const estadoIdx  = header.findIndex((h) => h.includes('ESTADO')  || h === 'ESTADO');
   const tituloIdx  = header.findIndex((h) => h.includes('TITULO')  || h.includes('TÍTULO'));
 
@@ -27,29 +23,69 @@ export function parsePlanFromText(text: string): Materia[] {
 
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-    const yearVal = añoIdx >= 0 ? row[añoIdx]?.trim() : '';
+    const cell = (idx: number) => String(idx >= 0 ? row[idx] ?? '' : '').trim();
+
+    const yearVal = cell(añoIdx);
     const y = yearVal !== '' && /^\d+$/.test(yearVal) ? parseInt(yearVal, 10) : currentYear;
     currentYear = y;
-    const codigo  = codigoIdx  >= 0 ? row[codigoIdx]  ?? '' : '';
-    const materia = materiaIdx >= 0 ? row[materiaIdx]?.trim() ?? '' : '';
-    const nota    = notaIdx    >= 0 ? row[notaIdx]    ?? '' : '';
-    const estado  = estadoIdx  >= 0 ? row[estadoIdx]?.trim() ?? '' : '';
-    const titulo  = tituloIdx  >= 0 ? row[tituloIdx]?.trim() ?? '' : '';
+
+    const materia = cell(materiaIdx);
     if (!materia) continue;
 
-    const estadoUsuario = estado.toUpperCase() === 'APROBADO' ? 'aprobada' : 'pendiente';
+    const nota   = cell(notaIdx);
+    const estado = cell(estadoIdx);
+
+    // Auto-detect estado from nota (number ≥ 4 = aprobada) or explicit ESTADO column
+    let estadoUsuario: Materia['estadoUsuario'] = 'pendiente';
+    const notaNum = parseFloat(nota.replace(',', '.'));
+    if (!isNaN(notaNum) && notaNum >= 4) {
+      estadoUsuario = 'aprobada';
+    } else if (estado.toUpperCase() === 'APROBADO' || estado.toUpperCase() === 'APROBADA') {
+      estadoUsuario = 'aprobada';
+    } else if (estado.toUpperCase() === 'REGULAR') {
+      estadoUsuario = 'regular';
+    }
+
     materias.push({
       id: `m-${id++}`,
       year: y,
-      codigo,
+      codigo: cell(codigoIdx),
       materia,
       nota,
       estado,
       estadoUsuario,
-      titulo,
+      titulo: cell(tituloIdx),
     });
   }
   return materias;
+}
+
+/** Parse from CSV text */
+export function parsePlanFromText(text: string): Materia[] {
+  const lines = text.replace(/\r\n/g, '\n').split('\n').filter((l) => l.trim());
+  const rows = lines.map((line) => line.split(',').map((cell) => cell.trim()));
+  return rowsToMaterias(rows);
+}
+
+/** Parse from an Excel file (ArrayBuffer) */
+export function parsePlanFromExcel(buffer: ArrayBuffer): Materia[] {
+  const wb = XLSX.read(buffer, { type: 'buffer' });
+  // Use the first sheet
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  // Convert to array of arrays (header row included)
+  const rows: string[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' }) as string[][];
+  return rowsToMaterias(rows);
+}
+
+/** Parse from a File object (auto-detects CSV vs Excel) */
+export async function parsePlanFromFile(file: File): Promise<Materia[]> {
+  const isExcel = /\.(xlsx|xls|ods)$/i.test(file.name);
+  if (isExcel) {
+    const buffer = await file.arrayBuffer();
+    return parsePlanFromExcel(buffer);
+  }
+  const text = await file.text();
+  return parsePlanFromText(text);
 }
 
 export async function loadPlan(): Promise<Materia[]> {

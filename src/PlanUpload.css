@@ -193,7 +193,7 @@ details[open] .upload-hint summary::before { content: '▾ '; }
   margin: 0.25rem 0;
 }
 
-/* ─── Error ─── */
+/* ─── Error & success ─── */
 .upload-error {
   font-size: 0.8rem;
   color: #dc2626;
@@ -202,6 +202,17 @@ details[open] .upload-hint summary::before { content: '▾ '; }
   border-radius: 8px;
   padding: 0.5rem 0.75rem;
   margin: 0 0 0.875rem;
+}
+
+.upload-notas-ok {
+  font-size: 0.8rem;
+  color: #16a34a;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin: 0 0 0.875rem;
+  font-weight: 600;
 }
 
 /* ─── Actions ─── */

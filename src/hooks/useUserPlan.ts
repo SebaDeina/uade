@@ -72,11 +72,11 @@ export function useUserPlan(uid: string) {
     [uid]
   );
 
-  /** Carga un plan personalizado desde texto CSV y lo guarda en Firestore */
+  /** Carga un plan personalizado. Si se pasan `preParsed`, se usan directamente (Excel/CSV ya procesado) */
   const uploadPlan = useCallback(
-    async (csvText: string, name: string) => {
-      const parsed = parsePlanFromText(csvText);
-      if (parsed.length === 0) throw new Error('El CSV no tiene materias válidas');
+    async (csvText: string, name: string, preParsed?: Materia[]) => {
+      const parsed = preParsed ?? parsePlanFromText(csvText);
+      if (parsed.length === 0) throw new Error('No se encontraron materias válidas');
 
       // Guardamos solo los datos base (sin estadoUsuario)
       const baseMaterias: BasePlanMateria[] = parsed.map(({ estadoUsuario: _e, ...rest }) => rest);
@@ -86,7 +86,6 @@ export function useUserPlan(uid: string) {
 
       setCareerName(name);
       setHasCustomPlan(true);
-      // Reiniciamos estados en local
       setMateriasState(parsed);
     },
     [uid]

@@ -82,13 +82,18 @@ function MateriaRow({
       title="Clic: Regular → Final Previo → Aprobada → Recursar → Reiniciar"
     >
       <span className="plan-materia-name">{displayName}</span>
-      {showStatus && (
-        <span className="plan-materia-status">
-          {showCursable && m.estadoUsuario === 'pendiente' ? 'PUEDO CURSAR' :
-           showCursable && m.estadoUsuario === 'recursar' ? 'PUEDO CURSAR' :
-           statusLabel[m.estadoUsuario] ?? ''}
-        </span>
-      )}
+      <span className="plan-materia-right">
+        {m.nota && m.nota.trim() !== '' && (
+          <span className="plan-materia-nota">{m.nota}</span>
+        )}
+        {showStatus && (
+          <span className="plan-materia-status">
+            {showCursable && m.estadoUsuario === 'pendiente' ? 'PUEDO CURSAR' :
+             showCursable && m.estadoUsuario === 'recursar' ? 'PUEDO CURSAR' :
+             statusLabel[m.estadoUsuario] ?? ''}
+          </span>
+        )}
+      </span>
     </button>
   );
 }
