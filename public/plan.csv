@@ -1,0 +1,41 @@
+AÑO,Codigo,MATERIA,NOTA,ESTADO
+1,1.1.083,Administración Empresarial I,4,APROBADO
+,1.2.001,Marketing,4,APROBADO
+,5.5.001,Taller de Diseño Digital,8,APROBADO
+,2.3.001,Introducción al Derecho,9,APROBADO
+,3.1.038,Matemática Empresarial I,7,APROBADO
+2,1.1.084,Administración Empresarial II,,
+,3.1.036,Estadística Empresarial I,9,APROBADO
+,1.3.001,Contabilidad I,5,APROBADO
+,1.2.080,Plataformas y Negocios web,6,APROBADO
+,5.5.002,Taller de Programación I,6,APROBADO
+3,1.1.143,Gestión de las Personas en las Organizaciones,7,APROBADO
+,1.4.001,Microeconomía,,DESAPROBADO
+,3.1.039,Matemática Empresarial II,5,APROBADO
+,1.2.082,Comunicación Multimedial,8,APROBADO
+,2.3.003,Obligaciones y Contratos,8,APROBADO
+4,1.3.013,Contabilidad Gerencial,,
+,3.1.037,Estadística Empresarial II,,DESAPROBADO
+,4.8.155,Diseño y Desarrollo UX,,
+,1.2.089,Inteligencia de Negocios y Analítica Digital,,
+,5.5.003,Taller de Programación II,,APROBADO
+3,,Optativa I,10,APROBADO
+,,Optativa II,10,APROBADO
+,1.4.002,Cálculo Financiero,,
+,4.7.016,Gestión de Productos Digitales,,
+,4.7.017,Estrategias de Precios,,
+,,Optativa III,8,APROBADO
+,,Optativa IV,,
+,1.3.023,Impuestos,,
+,1.1.093,Liderazgo y Negociación,7,APROBADO
+,4.7.018,Logística Aplicada a Negocios Digitales,,
+4,,Optativa V,,
+,1.4.021,Finanzas Corporativas I,,
+,1.1.087,Dirección Estratégica,,EN CURSO
+,4.7.019,Ciencia de Datos Para Negocios,,
+,1.1.146,Consultoría,,
+,,Optativa VI,,
+,,Optativa VII,,
+,1.1.090,Desarrollo Empresarial,,
+,4.7.020,Tópicos Avanzados en Negocios Digitales,,
+,4.7.021,Trabajo Integrador Final en Negocios Digitales,,
